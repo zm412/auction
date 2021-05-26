@@ -1,0 +1,150 @@
+
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    
+<div class="container">
+      <div> Auction: {{ auction.product.name }} </div>
+  <div class="row">
+
+    <div class="col-sm-12 col-md-6 col-lg-4">
+      <img 
+        src="../../../media/{{ img}}" 
+        alt="{{ auction.product.img }}" 
+        style="float:left; max-height:300px; max-width:350px; padding: 10px" 
+        >
+    </div>
+
+    <div class="col-sm-12 col-md-6 col-lg-5">
+      
+      <div class="card text-left" style="padding: 10px">
+        <h5 class="card-title">{{ auction.product.title }}</h5>
+        <p class="card-text">{{ auction.product.description }}</p>
+
+        {% if watchers > 0 %} 
+          <p>{{ watchers }} watcher(s)</p>
+        {% endif %} 
+
+
+        {% if current_bid %}   
+          <div class='row'>
+            <div class='col-sm-8'>
+                current bid: <span style='font-weight: bold; font-size: 20px'>${{ current_bid.bid }}</span><br>
+            </div>
+            <div class='col-sm-4'>
+              <strong>[{{ count_bids}} bid{{ count_bids|pluralize }}]</strong>
+            </div>
+          </div>
+            <small>from user {{ current_bid.user }}</small>
+        {% else %} 
+            <br>    start price: <strong> ${{ auction.start_price }}</strong>
+        {% endif %} 
+
+
+        <br>
+        {% if is_not_seller %} 
+
+        <p style="color: red">{{ message }}</p>
+          {% if auction.auction_is_active %}  
+
+              <form class="row g-3" action="{% url 'make_bid' user_id=user_id auction_id=auction.id %} " method='POST'>
+                {% csrf_token %}
+                <div class="col-sm-4">
+                  <button type="submit" class="btn btn-secondary mb-3">Place bid</button>
+                </div>
+                <div class="col-sm-4">
+                  <input class='form-control' name='item_bid' placeholder="Make bid">
+                </div>
+              </form>
+
+            {% if if_in_wish %}  
+                <p style="color: blue">This item is in your watchlist!</p>
+
+                <form class="row " action="{% url 'remove_from_list' user_id auction.id %} ">
+                  {% csrf_token %}
+                  <div class="col-auto">
+                  <input type="submit" class="btn btn-secondary mb-3" value='Remove from watchlist'>
+                  </div>
+                </form>
+            {% else  %} 
+                <form class="row " action="{% url 'add_in_list' user_id auction.id %} ">
+                  {% csrf_token %}
+                  <div class="col-auto">
+                    <input type="submit" class="btn btn-secondary mb-3" value='Add in watchlist'>
+                  </div>
+                </form>
+            {% endif %} 
+
+            <form class="row " action="{% url 'add_comment' user_id=user_id auction_id=auction.id %} " method='POST'>
+              {% csrf_token %}
+              <div class="form-floating">
+                <div class="col-auto">
+                    <input type="submit" class="btn btn-secondary mb-3" value='Add comment'>
+                </div>
+                <div class="col-sm-2">
+                  <textarea name='comment'class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px; width: 250px"></textarea>
+                </div>
+              </div>
+            </form>
+
+          {% else %} 
+            <p style="color: red">Auction closed</p>
+            <p style="background: lightgrey">Bidding has ended on this item.</p>
+          {% endif %} 
+
+  {% else %} 
+
+          {% if auction.auction_is_active %} 
+            <form class="row g-3" action="{% url 'finish_trade' user_id auction.id %} ">
+              <div class="col-auto">
+                <input type="submit" class="btn btn-secondary mb-3" value='Close trading'>
+              </div>
+            </form>
+          {% else %} 
+            <p style="color: red">Auction closed</p>
+            <p style="background: lightgrey">Bidding has ended on this item.</p>
+          {% endif %} 
+
+      <p>This is your item!!!</p>
+
+  {% endif %}
+  </div>
+</div>
+
+    <div class="col-md-12 col-lg-3">
+      <strong>Details:</strong><br>
+      <ul>
+        <li>Auction opened: {{ auction.start_date }}</li>
+        <li>Seller: <strong> {{ auction.product.user }}</strong></li>
+        <li>
+          Category:
+          {% for c in auction.product.category.all %} 
+            {% if forloop.last %} 
+              <a href="{% url 'category' c.name %}">{{ c.name }}</a>
+            {% else %} 
+              <a href="{% url 'category' c.name %}">{{ c.name }}</a>,
+            {% endif %} 
+          {% endfor %} 
+        </li>
+      </ul>
+
+    </div>
+
+  </div>
+</div>
+ 
+      <h3>Comments</h3>
+      <ul>
+          {% for comment in comments %} 
+                <li>
+                  <h4>{{ comment.user }}</h4>
+                  <p>{{ comment.comment }}</p> 
+                </li>
+          {% empty %} 
+                <p>There are no comments yet</p>
+          {% endfor %} 
+      </ul>
+
+
+{% endblock %}
+
